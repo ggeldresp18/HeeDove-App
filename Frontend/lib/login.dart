@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'home.dart'; // Asegúrate de importar tu HomePage
+// Si usas rutas con nombre, puedes quitar esto.
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -26,9 +28,8 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SizedBox.expand(
-        // 👈 Ocupa toda la pantalla
         child: Container(
-          color: Colors.white, // Fondo blanco total
+          color: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Center(
             child: SingleChildScrollView(
@@ -58,7 +59,10 @@ class _LoginPageState extends State<LoginPage> {
                       );
 
                       if (success) {
-                        // Ingresar redireccion
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const HomePage()),
+                        );
                       }
                     },
                   ),

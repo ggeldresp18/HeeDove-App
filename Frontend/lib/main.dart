@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'login.dart';
-import 'register.dart'; // 👈 Importar RegisterPage
+import 'register.dart';
+import 'home.dart';
+import 'profile.dart';
+import 'settings.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initHiveForFlutter();
 
-  final httpLink = HttpLink('http://10.0.2.2:8000/graphql'); // Emulador Android
+  final httpLink = HttpLink('http://10.0.2.2:8000/graphql');
 
   final client = ValueNotifier(
     GraphQLClient(
@@ -30,9 +34,11 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
+        '/home': (context) => const HomePage(),
+        '/profile': (context) => const ProfilePage(),
+        '/settings': (context) => const SettingsPage(), 
       },
       initialRoute: '/',
     );
   }
 }
-// version con login y register
