@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'community.dart';
+import 'det_image.dart';
+import 'messenger.dart';
 import 'profile.dart';
 import 'settings.dart';
 import 'widgets/custom_bottom_navbar.dart';
+import 'videocall.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -160,57 +164,100 @@ class _HomePageState extends State<HomePage> {
                   mainAxisSpacing: 12,
                   children: filteredFeatures.map((feature) {
                     final isFav = favorites.contains(feature['title']);
-                    return Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0CA3C3),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Icon(
-                                feature['icon'],
-                                size: 30,
-                                color: Colors.white,
-                              ),
-                              IconButton(
-                                icon: Icon(
-                                  isFav
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
+                    final isVideoCall = feature['title'] == 'Videollamada';
+                    final isCommunity = feature['title'] == 'Comunidad';
+                    final isMessenger = feature['title'] == 'Amigos';
+                    final isDetImage = feature['title'] == 'Detección de imágenes';
+                    return GestureDetector(
+                      onTap: isVideoCall
+                          ? () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const VideoCallPage(),
+                                ),
+                              );
+                            }
+                          : isCommunity
+                              ? () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const CommunityPage(),
+                                    ),
+                                  );
+                                }
+                              : isMessenger
+                                  ? () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => const MessengerPage(),
+                                        ),
+                                      );
+                                    }
+                                  : isDetImage
+                                      ? () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => const DetImagePage(),
+                                            ),
+                                          );
+                                        }
+                                      : null,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0CA3C3),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Icon(
+                                  feature['icon'],
+                                  size: 30,
                                   color: Colors.white,
                                 ),
-                                onPressed: () {
-                                  setState(() {
-                                    if (isFav) {
-                                      favorites.remove(feature['title']);
-                                    } else {
-                                      favorites.add(feature['title']);
-                                    }
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            feature['title'],
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.white,
+                                IconButton(
+                                  icon: Icon(
+                                    isFav
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      if (isFav) {
+                                        favorites.remove(feature['title']);
+                                      } else {
+                                        favorites.add(feature['title']);
+                                      }
+                                    });
+                                  },
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            feature['desc'],
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ],
+                            const SizedBox(height: 8),
+                            Text(
+                              feature['title'],
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              feature['desc'],
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }).toList(),
