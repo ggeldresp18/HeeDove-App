@@ -52,7 +52,12 @@ class _VideoCallPageState extends State<VideoCallPage> {
                   bottomRight: Radius.circular(32),
                 ),
               ),
-              padding: const EdgeInsets.only(top: 48, left: 24, right: 24, bottom: 24),
+              padding: const EdgeInsets.only(
+                top: 48,
+                left: 24,
+                right: 24,
+                bottom: 24,
+              ),
               width: double.infinity,
               child: const Text(
                 'Videollamada',
@@ -80,7 +85,10 @@ class _VideoCallPageState extends State<VideoCallPage> {
                         backgroundColor: Colors.green[700],
                         child: Text(
                           user['avatar']!,
-                          style: const TextStyle(color: Colors.white, fontSize: 24),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -112,7 +120,9 @@ class _VideoCallPageState extends State<VideoCallPage> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: !showContacts ? Colors.green : Colors.transparent,
+                          color: !showContacts
+                              ? Colors.green
+                              : Colors.transparent,
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(20),
                             bottomLeft: Radius.circular(20),
@@ -123,7 +133,9 @@ class _VideoCallPageState extends State<VideoCallPage> {
                           child: Text(
                             'Recientes',
                             style: TextStyle(
-                              color: !showContacts ? Colors.white : Colors.green,
+                              color: !showContacts
+                                  ? Colors.white
+                                  : Colors.green,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -141,7 +153,9 @@ class _VideoCallPageState extends State<VideoCallPage> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: showContacts ? Colors.green : Colors.transparent,
+                          color: showContacts
+                              ? Colors.green
+                              : Colors.transparent,
                           borderRadius: const BorderRadius.only(
                             topRight: Radius.circular(20),
                             bottomRight: Radius.circular(20),
@@ -182,7 +196,10 @@ class _VideoCallPageState extends State<VideoCallPage> {
                         return ListTile(
                           leading: CircleAvatar(
                             backgroundColor: Colors.green[700],
-                            child: Text(contact['avatar']!, style: const TextStyle(color: Colors.white)),
+                            child: Text(
+                              contact['avatar']!,
+                              style: const TextStyle(color: Colors.white),
+                            ),
                           ),
                           title: Text(
                             contact['name']!,
@@ -199,7 +216,10 @@ class _VideoCallPageState extends State<VideoCallPage> {
                       },
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 16,
+                      ),
                       itemCount: recentCalls.length,
                       itemBuilder: (context, index) {
                         final call = recentCalls[index];
@@ -212,7 +232,10 @@ class _VideoCallPageState extends State<VideoCallPage> {
                           child: ListTile(
                             leading: CircleAvatar(
                               backgroundColor: Colors.green[700],
-                              child: Text(call['avatar']!, style: const TextStyle(color: Colors.white)),
+                              child: Text(
+                                call['avatar']!,
+                                style: const TextStyle(color: Colors.white),
+                              ),
                             ),
                             title: Text(
                               call['name']!,
@@ -222,7 +245,10 @@ class _VideoCallPageState extends State<VideoCallPage> {
                               ),
                             ),
                             trailing: IconButton(
-                              icon: const Icon(Icons.info_outline, color: Colors.blue),
+                              icon: const Icon(
+                                Icons.info_outline,
+                                color: Colors.blue,
+                              ),
                               onPressed: () {},
                             ),
                           ),
@@ -232,7 +258,7 @@ class _VideoCallPageState extends State<VideoCallPage> {
             ),
           ],
         ),
-        bottomNavigationBar: const CustomBottomNavBar(currentIndex: 0),
+        bottomNavigationBar: const CustomBottomNavBar(currentIndex: -1),
       ),
     );
   }

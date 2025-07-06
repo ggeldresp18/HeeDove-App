@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'home.dart'; // Asegúrate de importar tu HomePage
-// Si usas rutas con nombre, puedes quitar esto.
+import 'home.dart';
+import 'services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,10 +16,10 @@ class _LoginPageState extends State<LoginPage> {
   final _passController = TextEditingController();
 
   final String loginMutation = r'''
-    mutation Login($username: String!, $password: String!) {
-      login(username: $username, password: $password) {
-        success
-        message
+    mutation Login($loginData: LoginInput!) {
+      login(loginData: $loginData) {
+        accessToken
+        tokenType
       }
     }
   ''';
@@ -47,23 +47,46 @@ class _LoginPageState extends State<LoginPage> {
                   options: MutationOptions(
                     document: gql(loginMutation),
                     onCompleted: (dynamic resultData) {
-                      final response = resultData['login'];
-                      final success = response['success'] as bool;
-                      final msg = response['message'];
+                      print("Login: Respuesta recibida - $resultData");
+                      if (resultData != null && resultData['login'] != null) {
+                        print(
+                          "Login: Token recibido - ${resultData['login']['accessToken']}",
+                        );
+                        final response = resultData['login'];
+                        final token = response['accessToken'];
+                        final tokenType = response['tokenType'];
 
+                        // Guardar el token
+                        AuthService.saveToken(token, tokenType).then((_) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Inicio de sesión exitoso'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const HomePage()),
+                          );
+                        });
+                      }
+                    },
+                    onError: (error) {
+                      String errorMessage = 'Error de inicio de sesión';
+                      if (error != null) {
+                        if (error.graphqlErrors.isNotEmpty) {
+                          errorMessage = error.graphqlErrors[0].message;
+                        } else if (error.linkException != null) {
+                          errorMessage = 'Error de conexión al servidor';
+                        }
+                      }
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(msg),
-                          backgroundColor: success ? Colors.green : Colors.red,
+                          content: Text(errorMessage),
+                          backgroundColor: Colors.red,
                         ),
                       );
-
-                      if (success) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (_) => const HomePage()),
-                        );
-                      }
                     },
                   ),
                   builder: (RunMutation runMutation, QueryResult? result) {
@@ -80,12 +103,13 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         const SizedBox(height: 32),
 
-                        const Text("Usuario"),
+                        const Text("Correo electrónico"),
                         const SizedBox(height: 8),
                         TextField(
                           controller: _userController,
+                          keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
-                            hintText: 'Ingresa tu usuario',
+                            hintText: 'Ingresa tu correo electrónico',
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 20,
                             ),
@@ -141,10 +165,14 @@ class _LoginPageState extends State<LoginPage> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              runMutation({
-                                'username': _userController.text,
-                                'password': _passController.text,
-                              });
+                              final variables = {
+                                'loginData': {
+                                  'email': _userController.text,
+                                  'password': _passController.text,
+                                },
+                              };
+                              print('Variables: $variables'); // Para debug
+                              runMutation(variables);
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF13639D),

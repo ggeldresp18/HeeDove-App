@@ -20,15 +20,17 @@ class CustomBottomNavBar extends StatelessWidget {
         );
         break;
       case 1:
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const ProfilePage()),
+          (route) => false,
         );
         break;
       case 2:
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const SettingsPage()),
+          (route) => false,
         );
         break;
     }
@@ -36,21 +38,22 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Aseguramos que currentIndex sea 0, 1, o 2
+    final safeIndex = (currentIndex >= 0 && currentIndex <= 2)
+        ? currentIndex
+        : 0;
+
     return BottomNavigationBar(
-      currentIndex: currentIndex,
+      currentIndex: safeIndex,
       onTap: (index) => _onItemTapped(context, index),
-      selectedItemColor: Colors.green,
+      selectedItemColor: currentIndex < 0
+          ? Colors.white
+          : Colors.green, // Si currentIndex es negativo, nada se marca
       unselectedItemColor: Colors.white,
       backgroundColor: Colors.blue,
       items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home, size: 40),
-          label: '',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person, size: 40),
-          label: '',
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.home, size: 40), label: ''),
+        BottomNavigationBarItem(icon: Icon(Icons.person, size: 40), label: ''),
         BottomNavigationBarItem(
           icon: Icon(Icons.settings, size: 40),
           label: '',

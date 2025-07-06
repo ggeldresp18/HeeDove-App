@@ -1,31 +1,37 @@
+from fastapi import FastAPI, Request
 import strawberry
-from fastapi import FastAPI
 from strawberry.fastapi import GraphQLRouter
+from app.core.config import settings
+from app.graphql.queries import Query
+from app.graphql.mutations import Mutation
+from app.core.auth import get_current_user
 
-# Simulación de base de datos
-USUARIOS = {"admin": "123"}
+async def get_context(request: Request):
+    user = await get_current_user(request)
+    return {
+        "request": request,
+        "user": user
+    }
 
-@strawberry.type
-class AuthPayload:
-    success: bool
-    message: str
-
-@strawberry.type
-class Mutation:
-    @strawberry.mutation
-    def login(self, username: str, password: str) -> AuthPayload:
-        if username in USUARIOS and USUARIOS[username] == password:
-            return AuthPayload(success=True, message="Login correcto")
-        return AuthPayload(success=False, message="Credenciales incorrectas")
-
-@strawberry.type
-class Query:
-    hello: str = "Hola mundo"  # Requisito mínimo para el esquema
-
-# Crear el esquema completo con query y mutation
+# Crear el esquema de GraphQL
 schema = strawberry.Schema(query=Query, mutation=Mutation)
 
-# Configuración de FastAPI y ruta GraphQL
-graphql_app = GraphQLRouter(schema)
-app = FastAPI()
+# Crear el router de GraphQL con contexto
+graphql_app = GraphQLRouter(
+    schema,
+    context_getter=get_context
+)
+
+# Crear la aplicación FastAPI
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION
+)
+
+# Agregar el router de GraphQL
 app.include_router(graphql_app, prefix="/graphql")
+
+# Endpoint de salud
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}

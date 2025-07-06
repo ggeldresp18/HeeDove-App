@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'community.dart';
 import 'det_image.dart';
+import 'det_sound.dart';
 import 'messenger.dart';
 import 'profile.dart';
 import 'settings.dart';
@@ -167,7 +168,10 @@ class _HomePageState extends State<HomePage> {
                     final isVideoCall = feature['title'] == 'Videollamada';
                     final isCommunity = feature['title'] == 'Comunidad';
                     final isMessenger = feature['title'] == 'Amigos';
-                    final isDetImage = feature['title'] == 'Detección de imágenes';
+                    final isDetImage =
+                        feature['title'] == 'Detección de imágenes';
+                    final isDetSound =
+                        feature['title'] == 'Detección de sonidos';
                     return GestureDetector(
                       onTap: isVideoCall
                           ? () {
@@ -179,33 +183,42 @@ class _HomePageState extends State<HomePage> {
                               );
                             }
                           : isCommunity
-                              ? () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const CommunityPage(),
-                                    ),
-                                  );
-                                }
-                              : isMessenger
-                                  ? () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => const MessengerPage(),
-                                        ),
-                                      );
-                                    }
-                                  : isDetImage
-                                      ? () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => const DetImagePage(),
-                                            ),
-                                          );
-                                        }
-                                      : null,
+                          ? () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const CommunityPage(),
+                                ),
+                              );
+                            }
+                          : isMessenger
+                          ? () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const MessengerPage(),
+                                ),
+                              );
+                            }
+                          : isDetImage
+                          ? () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const DetImagePage(),
+                                ),
+                              );
+                            }
+                          : isDetSound
+                          ? () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const DetSoundPage(),
+                                ),
+                              );
+                            }
+                          : null,
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(

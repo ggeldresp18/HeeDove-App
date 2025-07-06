@@ -50,7 +50,12 @@ class _CommunityPageState extends State<CommunityPage> {
                 bottomRight: Radius.circular(32),
               ),
             ),
-            padding: const EdgeInsets.only(top: 48, left: 24, right: 24, bottom: 24),
+            padding: const EdgeInsets.only(
+              top: 48,
+              left: 24,
+              right: 24,
+              bottom: 24,
+            ),
             width: double.infinity,
             child: const Text(
               'Comunidad HeeDove',
@@ -79,15 +84,22 @@ class _CommunityPageState extends State<CommunityPage> {
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF278B1C) : Colors.transparent,
+                        color: isSelected
+                            ? const Color(0xFF278B1C)
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF278B1C), width: 2),
+                        border: Border.all(
+                          color: const Color(0xFF278B1C),
+                          width: 2,
+                        ),
                       ),
                       child: Center(
                         child: Text(
                           tabs[index],
                           style: TextStyle(
-                            color: isSelected ? Colors.white : const Color(0xFF278B1C),
+                            color: isSelected
+                                ? Colors.white
+                                : const Color(0xFF278B1C),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -102,7 +114,9 @@ class _CommunityPageState extends State<CommunityPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               elevation: 2,
               child: Padding(
                 padding: const EdgeInsets.all(12),
@@ -139,7 +153,9 @@ class _CommunityPageState extends State<CommunityPage> {
               itemBuilder: (context, index) {
                 final post = posts[index];
                 return Card(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   margin: const EdgeInsets.only(bottom: 16),
                   elevation: 2,
                   child: Padding(
@@ -151,17 +167,25 @@ class _CommunityPageState extends State<CommunityPage> {
                           children: [
                             CircleAvatar(
                               backgroundColor: Colors.green[700],
-                              child: Text(post['avatar']!, style: const TextStyle(color: Colors.white)),
+                              child: Text(
+                                post['avatar']!,
+                                style: const TextStyle(color: Colors.white),
+                              ),
                             ),
                             const SizedBox(width: 10),
                             Text(
                               post['user']!,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const Spacer(),
                             Text(
                               post['time']!,
-                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),
@@ -177,7 +201,7 @@ class _CommunityPageState extends State<CommunityPage> {
           ),
         ],
       ),
-      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 0),
+      bottomNavigationBar: const CustomBottomNavBar(currentIndex: -1),
     );
   }
 }

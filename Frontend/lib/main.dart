@@ -5,20 +5,14 @@ import 'register.dart';
 import 'home.dart';
 import 'profile.dart';
 import 'settings.dart';
-
+import 'services/graphql_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initHiveForFlutter();
 
-  final httpLink = HttpLink('http://10.0.2.2:8000/graphql');
-
-  final client = ValueNotifier(
-    GraphQLClient(
-      link: httpLink,
-      cache: GraphQLCache(store: HiveStore()),
-    ),
-  );
+  // Inicializar el cliente GraphQL con autenticación
+  final client = GraphQLConfig.initializeClient();
 
   runApp(GraphQLProvider(client: client, child: const MyApp()));
 }
@@ -36,7 +30,7 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegisterPage(),
         '/home': (context) => const HomePage(),
         '/profile': (context) => const ProfilePage(),
-        '/settings': (context) => const SettingsPage(), 
+        '/settings': (context) => const SettingsPage(),
       },
       initialRoute: '/',
     );

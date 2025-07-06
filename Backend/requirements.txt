@@ -1,0 +1,11 @@
+fastapi==0.101.1
+uvicorn==0.23.2
+sqlalchemy==2.0.20
+psycopg2-binary==2.9.7
+python-dotenv==1.0.0
+alembic==1.11.3
+strawberry-graphql[debug-server]==0.205.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+pydantic[email]==2.3.0
+python-multipart==0.0.6

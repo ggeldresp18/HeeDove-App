@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:heedove/services/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -9,10 +10,12 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   int currentStep = 0;
+  bool _isLoading = false;
 
   // Controladores para los campos
   final _nombreController = TextEditingController();
   final _apellidoController = TextEditingController();
+  final _emailController = TextEditingController();
   final _usuarioController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -43,7 +46,11 @@ class _RegisterPageState extends State<RegisterPage> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: currentStep == 0 ? _buildStep1() : _buildStep2(),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : currentStep == 0
+                    ? _buildStep1()
+                    : _buildStep2(),
               ),
             ),
           ),
@@ -79,6 +86,15 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
 
         const SizedBox(height: 20),
+        const Text("Correo electrónico"),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: _inputDecoration("Ingresa tu correo electrónico"),
+        ),
+
+        const SizedBox(height: 20),
         const Text("Condición"),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
@@ -99,15 +115,23 @@ class _RegisterPageState extends State<RegisterPage> {
           width: double.infinity,
           child: ElevatedButton(
             onPressed: () {
-              if (_nombreController.text.isNotEmpty &&
-                  _apellidoController.text.isNotEmpty &&
-                  _condicionSeleccionada != null) {
-                setState(() {
-                  currentStep = 1;
-                });
-              } else {
+              if (_nombreController.text.isEmpty ||
+                  _apellidoController.text.isEmpty ||
+                  _emailController.text.isEmpty ||
+                  _condicionSeleccionada == null) {
                 _showMsg("Completa todos los campos");
+                return;
               }
+
+              // Validar formato de email
+              if (!_isValidEmail(_emailController.text)) {
+                _showMsg("Por favor, ingresa un correo electrónico válido");
+                return;
+              }
+
+              setState(() {
+                currentStep = 1;
+              });
             },
             style: _btnStyle(const Color(0xFF13639D)),
             child: const Text("Siguiente"),
@@ -128,7 +152,7 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
         const SizedBox(height: 24),
 
-        const Text("Usuario"),
+        const Text("Nombre de usuario"),
         const SizedBox(height: 8),
         TextField(
           controller: _usuarioController,
@@ -161,10 +185,7 @@ class _RegisterPageState extends State<RegisterPage> {
             const SizedBox(width: 16),
             Expanded(
               child: ElevatedButton(
-                onPressed: () {
-                  // Aquí podrías hacer una llamada a GraphQL más adelante
-                  _showMsg("Registro completado (aún sin conexión a backend)");
-                },
+                onPressed: _handleRegister,
                 style: _btnStyle(
                   const Color(0xFF05E3C7),
                   textColor: Colors.black,
@@ -176,6 +197,63 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
       ],
     );
+  }
+
+  // Validar formato de email
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  }
+
+  // Método para manejar el registro
+  Future<void> _handleRegister() async {
+    // Validaciones
+    if (_usuarioController.text.isEmpty || _passwordController.text.isEmpty) {
+      _showMsg("Por favor, completa todos los campos");
+      return;
+    }
+
+    // Validar longitud mínima de contraseña
+    if (_passwordController.text.length < 6) {
+      _showMsg("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      print("Iniciando registro con datos:");
+      print("Email: ${_emailController.text}");
+      print("Usuario: ${_usuarioController.text}");
+      print("Nombre: ${_nombreController.text}");
+      print("Apellido: ${_apellidoController.text}");
+      print("Condición: $_condicionSeleccionada");
+
+      final result = await AuthService.register(
+        username: _usuarioController.text,
+        email: _emailController.text,
+        password: _passwordController.text,
+        firstName: _nombreController.text,
+        lastName: _apellidoController.text,
+        condition: _condicionSeleccionada!,
+      );
+
+      print("Respuesta del servidor: $result");
+
+      if (!mounted) return;
+
+      // Mostrar mensaje de éxito
+      _showMsg("¡Registro exitoso! Por favor, inicia sesión.");
+
+      // Navegar a la pantalla de login
+      Navigator.of(context).pushReplacementNamed('/');
+    } catch (e) {
+      print("Error durante el registro: $e");
+      _showMsg(e.toString().replaceAll("Exception: ", ""));
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   // Reutilizable: decoración de campos
