@@ -7,6 +7,8 @@ import 'profile.dart';
 import 'settings.dart';
 import 'widgets/custom_bottom_navbar.dart';
 import 'videocall.dart';
+import 'services/favorite_service.dart';
+import 'services/user_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,34 +19,135 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String selectedCategory = 'All';
-  final Set<String> favorites = {};
+  Set<String> favorites = {};
+  bool _isLoading = true;
+  String _userName = '';
+  String _userLastName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorites();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final userData = await UserService.getCurrentUser();
+      setState(() {
+        _userName = userData['firstName'] ?? '';
+        _userLastName = userData['lastName'] ?? '';
+      });
+    } catch (e) {
+      print("Error cargando datos del usuario: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cargar datos del usuario: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadFavorites() async {
+    try {
+      setState(() => _isLoading = true);
+      final favList = await FavoriteService.getFavorites();
+      setState(() {
+        favorites = favList.map((fav) => fav['itemId'] as String).toSet();
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("Error cargando favoritos: $e");
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cargar favoritos: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleFavorite(String itemId, String title) async {
+    try {
+      if (favorites.contains(itemId)) {
+        // Eliminar de favoritos
+        await FavoriteService.removeFavorite('feature', itemId);
+        setState(() {
+          favorites.remove(itemId);
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$title eliminado de favoritos'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } else {
+        // Agregar a favoritos
+        await FavoriteService.addFavorite('feature', itemId);
+        setState(() {
+          favorites.add(itemId);
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$title agregado a favoritos'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print("Error al modificar favorito: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   final List<Map<String, dynamic>> allFeatures = [
     {
+      'id': 'videollamada',
       'icon': Icons.video_call,
       'title': 'Videollamada',
       'desc': 'Traducción de señas y transcripción de voz',
       'category': 'video',
     },
     {
+      'id': 'comunidad',
       'icon': Icons.group,
       'title': 'Comunidad',
       'desc': 'Interactúa con miles de usuarios',
       'category': 'social',
     },
     {
+      'id': 'deteccion-imagenes',
       'icon': Icons.visibility,
       'title': 'Detección de imágenes',
       'desc': 'Percibe los objetos a tu alrededor',
       'category': 'visual',
     },
     {
+      'id': 'deteccion-sonidos',
       'icon': Icons.hearing,
       'title': 'Detección de sonidos',
       'desc': 'Percibe los sonidos a tu alrededor',
       'category': 'audio',
     },
     {
+      'id': 'amigos',
       'icon': Icons.chat,
       'title': 'Amigos',
       'desc': 'Chatea con tus amigos',
@@ -55,7 +158,7 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> get filteredFeatures {
     if (selectedCategory == 'All') return allFeatures;
     if (selectedCategory == 'Favorites') {
-      return allFeatures.where((f) => favorites.contains(f['title'])).toList();
+      return allFeatures.where((f) => favorites.contains(f['id'])).toList();
     }
     if (selectedCategory == 'deteccion') {
       return allFeatures
@@ -108,12 +211,17 @@ class _HomePageState extends State<HomePage> {
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     Text(
-                      'Usuario040325',
-                      style: TextStyle(color: Colors.white, fontSize: 30),
+                      '$_userName $_userLastName',
+                      style: const TextStyle(color: Colors.white, fontSize: 30),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    Icon(Icons.account_circle, color: Colors.white, size: 40),
+                    const Icon(
+                      Icons.account_circle,
+                      color: Colors.white,
+                      size: 40,
+                    ),
                   ],
                 ),
               ),
@@ -164,14 +272,12 @@ class _HomePageState extends State<HomePage> {
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                   children: filteredFeatures.map((feature) {
-                    final isFav = favorites.contains(feature['title']);
-                    final isVideoCall = feature['title'] == 'Videollamada';
-                    final isCommunity = feature['title'] == 'Comunidad';
-                    final isMessenger = feature['title'] == 'Amigos';
-                    final isDetImage =
-                        feature['title'] == 'Detección de imágenes';
-                    final isDetSound =
-                        feature['title'] == 'Detección de sonidos';
+                    final isFav = favorites.contains(feature['id']);
+                    final isVideoCall = feature['id'] == 'videollamada';
+                    final isCommunity = feature['id'] == 'comunidad';
+                    final isMessenger = feature['id'] == 'amigos';
+                    final isDetImage = feature['id'] == 'deteccion-imagenes';
+                    final isDetSound = feature['id'] == 'deteccion-sonidos';
                     return GestureDetector(
                       onTap: isVideoCall
                           ? () {
@@ -244,13 +350,10 @@ class _HomePageState extends State<HomePage> {
                                     color: Colors.white,
                                   ),
                                   onPressed: () {
-                                    setState(() {
-                                      if (isFav) {
-                                        favorites.remove(feature['title']);
-                                      } else {
-                                        favorites.add(feature['title']);
-                                      }
-                                    });
+                                    _toggleFavorite(
+                                      feature['id'],
+                                      feature['title'],
+                                    );
                                   },
                                 ),
                               ],

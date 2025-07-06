@@ -145,7 +145,8 @@ class Query:
                         lastName=sender.last_name,
                         condition=sender.condition,
                         isActive=sender.is_active,
-                        createdAt=sender.created_at
+                        createdAt=sender.created_at,
+                        friendCode=sender.friend_code or "0000000000"
                     ),
                     receiver=User(
                         id=str(user.id),
@@ -155,7 +156,8 @@ class Query:
                         lastName=user.last_name,
                         condition=user.condition,
                         isActive=user.is_active,
-                        createdAt=user.created_at
+                        createdAt=user.created_at,
+                        friendCode=user.friend_code or "0000000000"
                     )
                 ))
                 
@@ -197,7 +199,8 @@ class Query:
                         lastName=user.last_name,
                         condition=user.condition,
                         isActive=user.is_active,
-                        createdAt=user.created_at
+                        createdAt=user.created_at,
+                        friendCode=user.friend_code or "0000000000"
                     ),
                     receiver=User(
                         id=str(receiver.id),
@@ -207,9 +210,37 @@ class Query:
                         lastName=receiver.last_name,
                         condition=receiver.condition,
                         isActive=receiver.is_active,
-                        createdAt=receiver.created_at
+                        createdAt=receiver.created_at,
+                        friendCode=receiver.friend_code or "0000000000"
                     )
                 ))
                 
         print(f"Se encontraron {len(result)} solicitudes enviadas")
+        return result
+
+    @strawberry.field
+    def get_user_favorites(self, info) -> List[Favorite]:
+        user = info.context.get("user")
+        if not user:
+            print("Error: Usuario no encontrado en el contexto")
+            raise ValueError("No autenticado")
+            
+        db = next(get_db())
+        print(f"Buscando favoritos del usuario {user.email}")
+        
+        favorites = db.query(FavoriteModel).filter(
+            FavoriteModel.user_id == user.id
+        ).all()
+        
+        result = []
+        for fav in favorites:
+            result.append(Favorite(
+                id=str(fav.id),
+                userId=str(fav.user_id),
+                itemType=fav.item_type,
+                itemId=fav.item_id,
+                createdAt=fav.created_at
+            ))
+            
+        print(f"Se encontraron {len(result)} favoritos")
         return result

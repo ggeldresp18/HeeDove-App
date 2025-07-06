@@ -132,7 +132,10 @@ class Mutation:
         
         if existing_request:
             if existing_request.status == "PENDING":
-                raise ValueError("Ya existe una solicitud de amistad pendiente")
+                if str(existing_request.sender_id) == str(user.id):
+                    raise ValueError("Ya has enviado una solicitud de amistad a este usuario. Por favor, espera a que la acepte o rechace.")
+                else:
+                    raise ValueError("Este usuario ya te ha enviado una solicitud de amistad. Revisa la pestaña 'Recibidas'.")
             elif existing_request.status == "ACCEPTED":
                 raise ValueError("Ya son amigos")
         
@@ -380,7 +383,10 @@ class Mutation:
         
         if existing_request:
             if existing_request.status == "PENDING":
-                raise ValueError("Ya existe una solicitud de amistad pendiente")
+                if str(existing_request.sender_id) == str(user.id):
+                    raise ValueError("Ya has enviado una solicitud de amistad a este usuario. Por favor, espera a que la acepte o rechace.")
+                else:
+                    raise ValueError("Este usuario ya te ha enviado una solicitud de amistad. Revisa la pestaña 'Recibidas'.")
             elif existing_request.status == "ACCEPTED":
                 raise ValueError("Ya son amigos")
         
@@ -434,3 +440,78 @@ class Mutation:
                 friendCode=friend.friend_code
             )
         )
+
+    @strawberry.mutation
+    def add_favorite(self, info, favorite: FavoriteInput) -> Favorite:
+        user = info.context.get("user")
+        if not user:
+            print("Error: Usuario no encontrado en el contexto")
+            raise ValueError("No autenticado")
+            
+        db = next(get_db())
+        
+        # Verificar si ya existe el favorito
+        existing_favorite = db.query(FavoriteModel).filter(
+            FavoriteModel.user_id == user.id,
+            FavoriteModel.item_type == favorite.itemType,
+            FavoriteModel.item_id == favorite.itemId
+        ).first()
+        
+        if existing_favorite:
+            print(f"El favorito ya existe para el usuario {user.email}")
+            raise ValueError("Este elemento ya está en favoritos")
+        
+        # Crear nuevo favorito
+        new_favorite = FavoriteModel(
+            user_id=user.id,
+            item_type=favorite.itemType,
+            item_id=favorite.itemId
+        )
+        
+        try:
+            db.add(new_favorite)
+            db.commit()
+            db.refresh(new_favorite)
+            
+            print(f"Favorito agregado exitosamente para {user.email}")
+            return Favorite(
+                id=str(new_favorite.id),
+                userId=str(new_favorite.user_id),
+                itemType=new_favorite.item_type,
+                itemId=new_favorite.item_id,
+                createdAt=new_favorite.created_at
+            )
+        except Exception as e:
+            db.rollback()
+            print(f"Error al agregar favorito: {e}")
+            raise ValueError("Error al agregar a favoritos")
+
+    @strawberry.mutation
+    def remove_favorite(self, info, itemType: str, itemId: str) -> bool:
+        user = info.context.get("user")
+        if not user:
+            print("Error: Usuario no encontrado en el contexto")
+            raise ValueError("No autenticado")
+            
+        db = next(get_db())
+        
+        # Buscar y eliminar el favorito
+        favorite = db.query(FavoriteModel).filter(
+            FavoriteModel.user_id == user.id,
+            FavoriteModel.item_type == itemType,
+            FavoriteModel.item_id == itemId
+        ).first()
+        
+        if not favorite:
+            print(f"Favorito no encontrado para el usuario {user.email}")
+            raise ValueError("Favorito no encontrado")
+        
+        try:
+            db.delete(favorite)
+            db.commit()
+            print(f"Favorito eliminado exitosamente para {user.email}")
+            return True
+        except Exception as e:
+            db.rollback()
+            print(f"Error al eliminar favorito: {e}")
+            raise ValueError("Error al eliminar de favoritos")

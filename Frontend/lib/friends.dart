@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'services/friend_service.dart';
 import 'services/friend_request_service.dart';
 
@@ -18,6 +19,7 @@ class _FriendsPageState extends State<FriendsPage>
   List<Map<String, dynamic>> _sentRequests = [];
   String _error = '';
   final _friendCodeController = TextEditingController();
+  String? _myFriendCode;
 
   @override
   void initState() {
@@ -47,6 +49,14 @@ class _FriendsPageState extends State<FriendsPage>
 
       print("FriendsPage: Obteniendo solicitudes enviadas...");
       final sentRequests = await FriendRequestService.getSentRequests();
+      if (sentRequests.isNotEmpty) {
+        final senderData = sentRequests[0]['sender'] as Map<String, dynamic>?;
+        _myFriendCode = senderData?['friendCode'] as String?;
+      } else if (friends.isNotEmpty) {
+        // Si no hay solicitudes enviadas pero sí hay amigos, intentar obtener el código de ahí
+        final userData = friends[0]['user'] as Map<String, dynamic>?;
+        _myFriendCode = userData?['friendCode'] as String?;
+      }
       print(
         "FriendsPage: ${sentRequests.length} solicitudes enviadas encontradas",
       );
@@ -78,6 +88,20 @@ class _FriendsPageState extends State<FriendsPage>
             content: Text('Error: ${e.toString()}'),
             duration: const Duration(seconds: 5),
             backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _copyFriendCode() async {
+    if (_myFriendCode != null) {
+      await Clipboard.setData(ClipboardData(text: _myFriendCode!));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Código copiado al portapapeles'),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -117,6 +141,8 @@ class _FriendsPageState extends State<FriendsPage>
   }
 
   Future<void> _showAddFriendDialog() async {
+    _friendCodeController
+        .clear(); // Limpiar el campo antes de mostrar el diálogo
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -153,7 +179,6 @@ class _FriendsPageState extends State<FriendsPage>
                     await FriendRequestService.sendRequestByCode(
                       _friendCodeController.text,
                     );
-                    // Recargar los datos después de enviar la solicitud
                     await _loadData();
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -261,30 +286,7 @@ class _FriendsPageState extends State<FriendsPage>
                 children: [
                   _buildFriendsList(),
                   _buildReceivedRequestsList(),
-                  Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: ElevatedButton.icon(
-                          onPressed: _showAddFriendDialog,
-                          icon: const Icon(Icons.person_add),
-                          label: const Text('Agregar amigo por código'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF278B1C),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(child: _buildSentRequestsList()),
-                    ],
-                  ),
+                  _buildSentRequestsTab(),
                 ],
               ),
             ),
@@ -400,72 +402,156 @@ class _FriendsPageState extends State<FriendsPage>
     );
   }
 
-  Widget _buildSentRequestsList() {
-    if (_sentRequests.isEmpty) {
-      return const Center(child: Text('No has enviado solicitudes de amistad'));
-    }
-
-    return ListView.separated(
-      itemCount: _sentRequests.length,
-      separatorBuilder: (_, __) => const Divider(),
-      itemBuilder: (context, index) {
-        final requestData = _sentRequests[index];
-        final receiverData = requestData['receiver'] as Map<String, dynamic>?;
-
-        if (receiverData == null) {
-          return const ListTile(
-            title: Text('Error: Información del destinatario no disponible'),
-          );
-        }
-
-        String statusText;
-        Color statusColor;
-        switch (requestData['status']) {
-          case 'PENDING':
-            statusText = 'Pendiente';
-            statusColor = Colors.orange;
-            break;
-          case 'REJECTED':
-            statusText = 'Rechazada';
-            statusColor = Colors.red;
-            break;
-          default:
-            statusText = 'Desconocido';
-            statusColor = Colors.grey;
-        }
-
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundColor: Colors.blue[700],
-            child: Text(
-              (receiverData['firstName'] as String)[0].toString().toUpperCase(),
-              style: const TextStyle(color: Colors.white),
+  Widget _buildSentRequestsTab() {
+    return Column(
+      children: [
+        if (_myFriendCode != null)
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Tu código de amigo:',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      TextButton.icon(
+                        icon: const Icon(Icons.copy),
+                        label: const Text('Copiar'),
+                        onPressed: _copyFriendCode,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _myFriendCode!,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                          color: Color(0xFF278B1C),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-          title: Text(
-            '${receiverData['firstName']} ${receiverData['lastName']}',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: Text('@${receiverData['username']}'),
-          trailing: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ElevatedButton.icon(
+            onPressed: _showAddFriendDialog,
+            icon: const Icon(Icons.person_add),
+            label: const Text('Agregar amigo por código'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF278B1C),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: Text(
-              statusText,
-              style: TextStyle(color: statusColor, fontWeight: FontWeight.w500),
-            ),
           ),
-        );
-      },
+        ),
+        Expanded(
+          child: _sentRequests.isEmpty
+              ? const Center(
+                  child: Text('No has enviado solicitudes de amistad'),
+                )
+              : ListView.separated(
+                  itemCount: _sentRequests.length,
+                  separatorBuilder: (_, __) => const Divider(),
+                  itemBuilder: (context, index) {
+                    final requestData = _sentRequests[index];
+                    final receiverData =
+                        requestData['receiver'] as Map<String, dynamic>?;
+
+                    if (receiverData == null) {
+                      return const ListTile(
+                        title: Text(
+                          'Error: Información del destinatario no disponible',
+                        ),
+                      );
+                    }
+
+                    String statusText;
+                    Color statusColor;
+                    switch (requestData['status']) {
+                      case 'PENDING':
+                        statusText = 'Pendiente';
+                        statusColor = Colors.orange;
+                        break;
+                      case 'REJECTED':
+                        statusText = 'Rechazada';
+                        statusColor = Colors.red;
+                        break;
+                      default:
+                        statusText = 'Desconocido';
+                        statusColor = Colors.grey;
+                    }
+
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.blue[700],
+                        child: Text(
+                          (receiverData['firstName'] as String)[0]
+                              .toString()
+                              .toUpperCase(),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      title: Text(
+                        '${receiverData['firstName']} ${receiverData['lastName']}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text('@${receiverData['username']}'),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          statusText,
+                          style: TextStyle(
+                            color: statusColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _friendCodeController.dispose();
     super.dispose();
   }
 }
