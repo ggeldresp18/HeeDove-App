@@ -271,7 +271,8 @@ class Mutation:
                     lastName=user.last_name,
                     condition=user.condition,
                     isActive=user.is_active,
-                    createdAt=user.created_at
+                    createdAt=user.created_at,
+                    friendCode=user.friend_code
                 ),
                 friend=User(
                     id=str(friend.id),
@@ -281,7 +282,8 @@ class Mutation:
                     lastName=friend.last_name,
                     condition=friend.condition,
                     isActive=friend.is_active,
-                    createdAt=friend.created_at
+                    createdAt=friend.created_at,
+                    friendCode=friend.friend_code
                 )
             )
         except Exception as e:

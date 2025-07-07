@@ -100,6 +100,7 @@ class FriendRequestService {
           condition
           isActive
           createdAt
+          friendCode
         }
         friend {
           __typename
@@ -111,6 +112,7 @@ class FriendRequestService {
           condition
           isActive
           createdAt
+          friendCode
         }
       }
     }
