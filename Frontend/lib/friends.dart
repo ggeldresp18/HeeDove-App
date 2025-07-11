@@ -212,7 +212,7 @@ class _FriendsPageState extends State<FriendsPage>
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Amigos'),
-        backgroundColor: const Color(0xFF278B1C),
+        backgroundColor: const Color.fromARGB(255, 76, 189, 155),
         bottom: TabBar(
           controller: _tabController,
           tabs: [
